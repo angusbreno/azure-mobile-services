@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
+using Xamarin.Auth._MobileServices;
+#if __UNIFIED__
+using Foundation;
+using UIKit;
+using NSAction = System.Action;
+#else
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
-using Xamarin.Auth;
+#endif
 
 namespace Microsoft.WindowsAzure.MobileServices
 {
@@ -25,6 +31,7 @@ namespace Microsoft.WindowsAzure.MobileServices
             var tcs = new TaskCompletionSource<string>();
 
             var auth = new WebRedirectAuthenticator(StartUri, EndUri);
+            auth.ShowUIErrors = false;
             auth.ClearCookiesBeforeLogin = false;
 
             UIViewController c = auth.GetUI();
@@ -54,7 +61,7 @@ namespace Microsoft.WindowsAzure.MobileServices
                 NSAction completed = () =>
                 {
                     if (!e.IsAuthenticated)
-                        tcs.TrySetException(new InvalidOperationException(Resources.IAuthenticationBroker_AuthenticationCanceled));
+                        tcs.TrySetException(new InvalidOperationException("Authentication was cancelled by the user."));
                     else
                         tcs.TrySetResult(e.Account.Properties["token"]);
                 };

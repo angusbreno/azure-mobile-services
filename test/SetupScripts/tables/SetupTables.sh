@@ -6,7 +6,11 @@ if [ "$1" = "" ]; then
   echo .    with all four login providers.
 else
   azure mobile table create $1 stringIdRoundTripTable
+  azure mobile table create $1 stringIdRoundTripSoftDeleteTable
   azure mobile table create $1 stringIdMovies
+  azure mobile table create $1 offlineReady
+  azure mobile table create $1 offlineReadyNoVersion
+  azure mobile table update --deleteColumn __version --quiet $1 offlineReadyNoVersion
   azure mobile table create --integerId $1 public
   azure mobile table create --integerId $1 admin
   azure mobile table create --integerId $1 application
@@ -24,15 +28,20 @@ else
   #Tables specific to iOS tests
   azure mobile table create --integerId $1 iosRoundTripTable
 
+  #Tables specific to Android tests
+  azure mobile table create --integerId $1 droidRoundTripTable
+
   #Tables used in push tests
   azure mobile table create $1 iosPushTest
   azure mobile table create $1 w8PushTest
   azure mobile table create $1 wp8PushTest
+  azure mobile table create --integerId $1 droidPushTest
 
   azure mobile table update -p insert=admin,read=admin,update=admin,delete=admin $1 admin
   azure mobile table update -p insert=application,read=application,update=application,delete=application $1 application
   azure mobile table update -p insert=user,read=user,update=user,delete=user $1 authenticated
   azure mobile table update -p insert=application,read=public,update=public,delete=public $1 public
+  azure mobile table update -p insert=user,read=user,update=user,delete=user $1 offlineReadyNoVersionAuthenticated
 
   azure mobile script upload $1 table/stringIdRoundTripTable.insert -f stringIdRoundTripTable.insert.js
   azure mobile script upload $1 table/stringIdRoundTripTable.update -f stringIdRoundTripTable.update.js
@@ -62,9 +71,15 @@ else
   #Tables specific to iOS tests
   azure mobile script upload $1 table/iosRoundTripTable.insert -f iosRoundTripTable.insert.js
 
+  #Tables specific to Android tests
+  azure mobile script upload $1 table/droidRoundTripTable.insert -f droidRoundTripTable.insert.js
+  azure mobile script upload $1 table/droidRoundTripTable.read -f droidRoundTripTable.read.js
+  azure mobile script upload $1 table/droidRoundTripTable.update -f droidRoundTripTable.update.js
+
   #Tables used in Push tests
   azure mobile script upload $1 table/w8PushTest.insert -f w8PushTest.insert.js
   azure mobile script upload $1 table/wp8PushTest.insert -f wp8PushTest.insert.js
   azure mobile script upload $1 table/iosPushTest.insert -f iosPushTest.insert.js
+  azure mobile script upload $1 table/droidPushTest.insert -f droidPushTest.insert.js
 
 fi

@@ -42,15 +42,6 @@ namespace Microsoft.WindowsAzure.MobileServices
         internal static readonly string CreatedAtSystemPropertyString = String.Format("{0}{1}", MobileServiceSerializer.SystemPropertyPrefix, MobileServiceSystemProperties.CreatedAt.ToString().ToLowerInvariant());
 
         /// <summary>
-        /// The name of the reserved Mobile Services id member.
-        /// </summary>
-        /// <remarks>
-        /// Note: This value is used by other areas like serialiation to find
-        /// the name of the reserved id member.
-        /// </remarks>
-        internal const string IdPropertyName = "id";
-
-        /// <summary>
         /// A regex for validating string ids
         /// </summary>
         private static Regex stringIdValidationRegex = new Regex(@"([\u0000-\u001F]|[\u007F-\u009F]|[""\+\?\\\/\`]|^\.{1,2}$)");
@@ -122,11 +113,11 @@ namespace Microsoft.WindowsAzure.MobileServices
 
             if (ignoreCase)
             {
-                gotId = instance.TryGetValue(IdPropertyName, StringComparison.OrdinalIgnoreCase, out idToken);
+                gotId = instance.TryGetValue(MobileServiceSystemColumns.Id, StringComparison.OrdinalIgnoreCase, out idToken);
             }
             else
             {
-                gotId = instance.TryGetValue(IdPropertyName, out idToken);
+                gotId = instance.TryGetValue(MobileServiceSystemColumns.Id, out idToken);
             }
 
             if (gotId)
@@ -174,8 +165,8 @@ namespace Microsoft.WindowsAzure.MobileServices
                 throw new ArgumentException(
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        Resources.MobileServiceSerializer_IdCasingIncorrect,
-                        IdPropertyName),
+                        "The casing of the '{0}' property is invalid.",
+                        MobileServiceSystemColumns.Id),
                      "instance");
             }
 
@@ -188,8 +179,8 @@ namespace Microsoft.WindowsAzure.MobileServices
                 throw new ArgumentException(
                        string.Format(
                            CultureInfo.InvariantCulture,
-                           Resources.MobileServiceSerializer_IdNotFound,
-                           IdPropertyName),
+                           "Expected {0} member not found.",
+                           MobileServiceSystemColumns.Id),
                        "instance");
             }
 
@@ -223,7 +214,7 @@ namespace Microsoft.WindowsAzure.MobileServices
                         haveCloned = true;
                     }
 
-                    if (String.Equals(property.Name, MobileServiceSerializer.VersionSystemPropertyString, StringComparison.OrdinalIgnoreCase))
+                    if (String.Equals(property.Name, MobileServiceSystemColumns.Version, StringComparison.OrdinalIgnoreCase))
                     {
                         version = (string)instance[property.Name];
                         if ((propertiesToKeep & MobileServiceSystemProperties.Version) == MobileServiceSystemProperties.Version)
@@ -284,7 +275,7 @@ namespace Microsoft.WindowsAzure.MobileServices
             {
                 if (!allowDefault)
                 {
-                    throw new InvalidOperationException(Resources.MobileServiceSerializer_NullOrEmptyStringId);
+                    throw new InvalidOperationException("The id can not be null or an empty string.");
                 }
                 return;
             }
@@ -323,7 +314,7 @@ namespace Microsoft.WindowsAzure.MobileServices
                 (!allowDefault && longId == 0))
             {
                 throw new InvalidOperationException(
-                    string.Format(Resources.MobileServiceSerializer_InvalidIntegerId, longId));
+                    string.Format("The integer id '{0}' is not a positive integer value.", longId));
             }
         }
 
@@ -333,18 +324,18 @@ namespace Microsoft.WindowsAzure.MobileServices
             if (stringId.Length > MaxStringIdLength)
             {
                 throw new InvalidOperationException(
-                    string.Format(Resources.MobileServiceSerializer_StringIdTooLong,
+                    string.Format("The string id '{0}' is longer than the max string id length of {1} characters.",
                         stringId,
                         MaxStringIdLength));
             }
             else if (stringIdValidationRegex.IsMatch(stringId))
             {
                 throw new InvalidOperationException(
-                    string.Format(Resources.MobileServiceSerializer_InvalidStringId, stringId));
+                    string.Format("The string id '{0}' is invalid. An id must not contain any control characters or the characters \",+,?,\\,/,`.", stringId));
             }
             else if (!allowDefault && stringId.Length == 0)
             {
-                throw new InvalidOperationException(Resources.MobileServiceSerializer_NullOrEmptyStringId);
+                throw new InvalidOperationException("The id can not be null or an empty string.");
             }
         }
 
@@ -380,7 +371,7 @@ namespace Microsoft.WindowsAzure.MobileServices
                 if (isInvalid)
                 {
                     throw new InvalidOperationException(
-                    string.Format(Resources.MobileServiceSerializer_LookupInvalidIdType,
+                    string.Format("The id parameter type '{0}' is invalid for looking up items of type '{1}'.",
                         id.GetType().FullName,
                         typeof(T).FullName));
                 }
@@ -389,7 +380,7 @@ namespace Microsoft.WindowsAzure.MobileServices
             else if (idPropertyType.GetTypeInfo().IsValueType)
             {
                 throw new InvalidOperationException(
-                     string.Format(Resources.MobileServiceSerializer_LookupInvalidIdType,
+                     string.Format("The id parameter type '{0}' is invalid for looking up items of type '{1}'.",
                          "<null>",
                          typeof(T).FullName));
             }
@@ -406,7 +397,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         {
             if (instance != null)
             {
-                instance[MobileServiceSerializer.IdPropertyName] = null;
+                instance[MobileServiceSystemColumns.Id] = null;
             }
         }
 
@@ -648,7 +639,7 @@ namespace Microsoft.WindowsAzure.MobileServices
                 
                 if (idTokenIsString && idPropertyIsInteger)
                 {
-                    throw new JsonSerializationException(ex.Message + Environment.NewLine + Resources.MobileServiceSerializer_IdTypeMismatch, ex);
+                    throw new JsonSerializationException(ex.Message + Environment.NewLine + "You might be affected by Mobile Services latest changes to support string Ids. For more details: http://go.microsoft.com/fwlink/?LinkId=330396", ex);
                 }
 
                 throw;

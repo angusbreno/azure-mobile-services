@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.WindowsAzure.MobileServices.Query;
 
 namespace Microsoft.WindowsAzure.MobileServices
 {
@@ -253,7 +254,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         }
 
         /// <summary>
-        /// Occurs when <see cref="LoadMoreItemsAsync"/> 
+        /// Occurs when <see cref="LoadMoreItemsAsync(int)"/> 
         /// starting to load items. 
         /// </summary>
         public event EventHandler LoadingItems;
@@ -299,7 +300,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         {
             if (busy)
             {
-                throw new InvalidOperationException(Resources.MobileServiceCollection_LoadInProcess);
+                throw new InvalidOperationException("Loading of more items already in process.");
             }
 
             busy = true;
